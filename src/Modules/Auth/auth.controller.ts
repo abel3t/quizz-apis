@@ -1,8 +1,14 @@
-import { Body, Controller, HttpException, HttpStatus, Post } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { UserLogin, UserRegister } from '../../Processors/DTOs/User';
+import { Body, Controller, Get, HttpException, HttpStatus, Post, Request, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Express } from 'express';
+
+import { UserLogin, UserRegister } from 'Processors/DTOs/User';
 import { HttpBadRequestError } from 'Errors/badRequest';
 
+import { AuthService } from './auth.service';
+import { JwtAuthGuard } from 'Guards/jwt.guard';
+
+@ApiTags('Auth')
 @Controller()
 export class AuthController {
   constructor(private readonly authService: AuthService) {
@@ -21,6 +27,17 @@ export class AuthController {
   async login(@Body() user: UserLogin) {
     try {
       return await this.authService.login(user);
+    } catch (error) {
+      new HttpBadRequestError(error);
+    }
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  async profile(@Request() req: Express) {
+    try {
+      console.log('Hello World', req.name);
     } catch (error) {
       new HttpBadRequestError(error);
     }
